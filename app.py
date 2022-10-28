@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey as survey
 
@@ -9,8 +9,6 @@ app.debug=True
 debug = DebugToolbarExtension(app)
 
 
-responses = []
-
 @app.route('/')
 def show_home():
     """Shows homepage"""
@@ -18,7 +16,7 @@ def show_home():
 
 @app.route('/questions/<int:number>')
 def show_question(number):
-
+    responses = session['responses']
     if number != len(responses):
         flash('You are trying to access an invalid question')
         return redirect(f'/questions/{len(responses)}')
@@ -31,7 +29,10 @@ def show_question(number):
 def answer_question(number):
     """records answer question and redirects user"""
     response = request.args.get('response')
+    responses = session['responses']
     responses.append(response)
+    print(session['responses'])
+    session['responses']=responses
     new_num = number + 1
     return redirect(f'/questions/{new_num}')
 
@@ -39,3 +40,8 @@ def answer_question(number):
 def thank_user():
     """Thanks user for completing the survey"""
     return render_template ('thankyou.html')
+
+@app.route('/create_response_list',methods=['GET','POST'])
+def create_response_list():
+    session['responses'] = []
+    return redirect('/questions/0')
